@@ -142,63 +142,56 @@ def project_results(manifest: dict, results: dict[str, dict]) -> dict:
 
 def render_cases(public: dict) -> str:
     lines = [
-        "# Published 120-query comparison",
+        "# Query results",
         "",
-        f"{public['query_count']} queries over the same {public['corpus_events']} real events. "
-        f"Label revision {public['label_revision']}.",
+        f"{public['query_count']} queries, {public['corpus_events']} real events, "
+        f"label revision {public['label_revision']}.",
         "",
-        "This is a diagnostic challenge set, not production recall. Main queries use no "
-        "device/time/event-type filters. Model-specific chunking and normalization are part "
-        "of the evaluated retrieval setup. See [methodology](../../EVALUATION.md) and "
-        "[provenance](../README.md).",
+        "Numbers are the first relevant result's rank; lower is better. A dash means "
+        "no relevant event exists in the candidate set, not that search returned nothing. "
+        "Matches is the number of relevant candidate events.",
         "",
-        "The machine-readable [results](results.json) include all returned top-ten source row "
-        "references and relevant/confuser labels, "
-        "but deliberately omit raw telemetry and snippets. "
-        "Reproduce locally to inspect the original evidence.",
-        "",
-        "## Main results",
-        "",
-        "| Retriever | Queries | Hit@1 | Hit@5 | Hit@10 | MRR@10 |",
-        "|---|---:|---:|---:|---:|---:|",
+        "[Findings and method](../../EVALUATION.md) / [Full results](results.json)",
     ]
-    for name in MODELS:
-        summary = public["summary"][name]
-        lines.append(
-            f"| {name} | {summary['queries']} | {summary['hit_at_1']:.4f} | "
-            f"{summary['hit_at_5']:.4f} | {summary['hit_at_10']:.4f} | "
-            f"{summary['mrr_at_10']:.4f} |"
-        )
-    lines += [
-        "",
-        "Hit@k means at least one field-relevant result in the first k. MRR@10 is the mean "
-        "reciprocal first-relevant rank, counting ranks beyond ten as zero. The main average "
-        "excludes mixed-evidence, absent-behavior, scope and short-query diagnostics.",
-        "",
-        "## Every exact query",
-        "",
-        "Ranks below are the first relevant result among the eligible events; lower is better. "
-        "A dash means no relevant result exists in the candidate set. No-answer queries still "
-        "return neighbors when candidates exist; there is no calibrated abstention.",
-        "",
-        "| Case | Track | Exact query | Positives | BM25 rank | MiniLM rank | Cisco rank |",
-        "|---|---|---|---:|---:|---:|---:|",
-    ]
-    for case in public["cases"]:
-        query = (
-            case["query"]
-            .replace("|", "\\|")
-            .replace("\n", " ")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-        )
-        ranks = [case["retrievers"][name]["metrics"]["first_relevant_rank"] for name in MODELS]
-        lines.append(
-            f"| {case['id']} | {case['track']} | {query} | "
-            f"{len(case['expected_source_records'])} | "
-            + " | ".join("-" if rank is None else str(rank) for rank in ranks)
-            + " |"
-        )
+    sections = (
+        ("main", "Behavior queries"),
+        ("mixed", "Multiple event types"),
+        ("no-answer", "Absent behaviors"),
+        ("scope", "Host and time scope"),
+        ("empty-scope", "Empty scopes"),
+        ("robustness", "Short queries and typos"),
+    )
+    unknown_tracks = {case["track"] for case in public["cases"]} - {track for track, _ in sections}
+    if unknown_tracks:
+        raise ValueError(f"Unknown query tracks: {sorted(unknown_tracks)}")
+    for track, title in sections:
+        cases = [case for case in public["cases"] if case["track"] == track]
+        if not cases:
+            continue
+        lines += [
+            "",
+            f"## {title}",
+            "",
+            "| Query | Matches | BM25 | MiniLM | Cisco |",
+            "|---|---:|---:|---:|---:|",
+        ]
+        for case in cases:
+            query = case["query"]
+            if case["scope"]:
+                scope = ", ".join(f"{key}={value}" for key, value in case["scope"].items())
+                query += f" (filter: {scope})" if case["apply_filter"] else " (no filter)"
+            query = (
+                query.replace("|", "\\|")
+                .replace("\n", " ")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
+            ranks = [case["retrievers"][name]["metrics"]["first_relevant_rank"] for name in MODELS]
+            lines.append(
+                f"| {query} | {len(case['expected_source_records'])} | "
+                + " | ".join("-" if rank is None else str(rank) for rank in ranks)
+                + " |"
+            )
     return "\n".join(lines) + "\n"
 
 

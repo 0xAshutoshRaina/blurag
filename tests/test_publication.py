@@ -85,6 +85,32 @@ def test_public_export_allows_only_metrics_queries_and_source_references():
     assert "DO_NOT_EXPORT" not in render_cases(public)
 
 
+def test_query_table_groups_cases_and_keeps_filter_conditions_visible():
+    manifest, results = fixture()
+    public = project_results(manifest, results)
+    main = public["cases"][0]
+    for track, apply_filter in (("scope", False), ("scope", True), ("empty-scope", True)):
+        extra = copy.deepcopy(main)
+        extra.update(track=track, scope={"device": "ALPHA"}, apply_filter=apply_filter)
+        public["cases"].append(extra)
+    rendered = render_cases(public)
+    assert "## Behavior queries" in rendered
+    assert "## Host and time scope" in rendered
+    assert "## Empty scopes" in rendered
+    assert "(no filter)" in rendered
+    assert "(filter: device=ALPHA)" in rendered
+    assert rendered.count("Find the public test event.") == 4
+    assert "| Case |" not in rendered
+
+
+def test_query_table_rejects_unknown_groups_instead_of_omitting_cases():
+    manifest, results = fixture()
+    public = project_results(manifest, results)
+    public["cases"][0]["track"] = "unrecognized"
+    with pytest.raises(ValueError, match="Unknown query tracks"):
+        render_cases(public)
+
+
 def test_export_refuses_non_public_or_changed_inputs():
     manifest, results = fixture()
     with pytest.raises(ValueError, match="pinned public"):
