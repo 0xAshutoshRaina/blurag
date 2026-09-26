@@ -1,0 +1,1 @@
+"""Offline telemetry vector search."""

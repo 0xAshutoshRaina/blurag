@@ -1,0 +1,25 @@
+{
+  "description": "Recorded local runtime used for the Cisco/MiniLM comparison; not a dependency lockfile.",
+  "python": "3.12.14",
+  "architecture": "aarch64",
+  "host": {
+    "platform": "macOS ARM64",
+    "memory_gib": 24,
+    "logical_cpus": 10,
+    "docker_memory_gib_approximate": 7.65,
+    "embedding_threads": 4
+  },
+  "packages": {
+    "blurag": "0.1.0",
+    "sentence-transformers": "5.0.0",
+    "transformers": "4.52.4",
+    "torch": "2.7.1",
+    "safetensors": "0.8.0",
+    "fastembed": "0.8.1",
+    "qdrant-client": "1.19.1",
+    "onnxruntime": "1.30.0",
+    "tokenizers": "0.21.4",
+    "numpy": "2.5.3"
+  },
+  "database_image": "qdrant/qdrant:v1.19.1"
+}

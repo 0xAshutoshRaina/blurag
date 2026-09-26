@@ -1,0 +1,15 @@
+BluRag
+Copyright 2026 Ashutosh Raina
+
+Original code and documentation are licensed under the Apache License, Version 2.0.
+
+This research uses OTRF Security-Datasets APT29 lab telemetry, Cisco SecureBERT
+2.0, and sentence-transformers/all-MiniLM-L6-v2. Those projects and their
+contributors retain their own rights. Raw telemetry, model weights and local
+vector databases are not distributed in this repository.
+
+See research/README.md for dataset and model attribution, pinned sources,
+license references, and the scope of the published results.
+
+The project is independent research and is not affiliated with or endorsed by
+Cisco, OTRF, Microsoft, Hugging Face, Qdrant, or other referenced organizations.

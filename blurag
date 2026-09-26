@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+cd "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+is_preparation() {
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --encoder|--collection)
+                shift
+                [ "$#" -gt 0 ] || return 1
+                shift
+                ;;
+            --encoder=*|--collection=*) shift ;;
+            prepare) return 0 ;;
+            *) return 1 ;;
+        esac
+    done
+    return 1
+}
+
+if is_preparation "$@"; then
+    exec docker compose run --rm --no-deps prepare "$@"
+fi
+exec docker compose run --rm cli "$@"

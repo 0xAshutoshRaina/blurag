@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blurag"
+version = "0.1.0"
+description = "Offline CPU vector search over Windows security telemetry"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.12"
+dependencies = [
+    "fastembed==0.8.1",
+    "sentence-transformers==5.0.0",
+    "transformers==4.52.4",
+    "torch==2.7.1",
+    "qdrant-client==1.19.1",
+    "ijson>=3.4,<4",
+    "requests>=2.32.4,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1"]
+
+[project.scripts]
+blurag = "blurag.cli:main"
+
+[project.urls]
+Repository = "https://github.com/0xAshutoshRaina/blurag"
+Research = "https://github.com/0xAshutoshRaina/blurag/blob/main/EVALUATION.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: requires the prepared local model and running Qdrant"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
